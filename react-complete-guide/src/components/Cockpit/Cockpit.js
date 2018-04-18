@@ -17,7 +17,6 @@ const cockpit = props => {
     assignedClasses.push(classes.bold);
   }
 
-  if (props.Aux)
   return (
     <Aux>
       <h1>{props.appTitle}</h1>
