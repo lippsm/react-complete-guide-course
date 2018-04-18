@@ -1,23 +1,26 @@
-import React, { PureComponent } from 'react';
+import React, { PureComponent } from "react";
 
-import classes from './App.css';
-import Persons from '../components/Persons/Persons';
-import Cockpit from '../components/Cockpit/Cockpit';
-import WithClass from '../hoc/WithClass';
+import classes from "./App.css";
+import Persons from "../components/Persons/Persons";
+import Cockpit from "../components/Cockpit/Cockpit";
+import Auxiliary from "../hoc/Auxiliary";
+import withClass from "../hoc/withClass";
+
+export const AuthContext = React.createContext(false);
 
 class App extends PureComponent {
   constructor(props) {
     super(props);
-    console.log('[App.js] Inside Constructor', props);
+    console.log("[App.js] Inside Constructor", props);
     // could also initialize state here, using this.state = {...stuff};
   }
 
   componentWillMount() {
-    console.log('[App.js] Inside componentWillMount()');
+    console.log("[App.js] Inside componentWillMount()");
   }
 
   componentDidMount() {
-    console.log('[App.js] Inside componentDidMount()');
+    console.log("[App.js] Inside componentDidMount()");
   }
 
   // shouldComponentUpdate(nextProps, nextState) {
@@ -26,20 +29,42 @@ class App extends PureComponent {
   // }
 
   componentWillUpdate(nextProps, nextState) {
-    console.log('[UPDATE App.js] Inside componentWillUpdate', nextProps, nextState);
+    console.log(
+      "[UPDATE App.js] Inside componentWillUpdate",
+      nextProps,
+      nextState
+    );
+  }
+
+  static getDerivedStateFromProps(nextProps, prevState) {
+    console.log(
+      "[UPDATE App.js] Inside getDerivedStateFromProps",
+      nextProps,
+      prevState
+    );
+
+    return prevState;
+  }
+
+  getSnapshotBeforeUpdate() {
+    console.log('[UPDATE App.js] Inside getSnapshotBeforeUpdate ');
+    // this, with componentDidUpdate, would be great for saving user's scrolling
+    // position and sending them back there on re-render.
   }
 
   componentDidUpdate() {
-    console.log('[UPDATE App.js] Inside componentDidUpdate');
+    console.log("[UPDATE App.js] Inside componentDidUpdate");
   }
 
   state = {
     persons: [
-      { name: 'Mike', age: 34, id: 'asdf1' },
-      { name: 'Katie', age: 26, id: 'asdf2' },
-      { name: 'Xander', age: 0, id: 'asdf3' }
+      { name: "Mike", age: 34, id: "asdf1" },
+      { name: "Katie", age: 26, id: "asdf2" },
+      { name: "Xander", age: 0, id: "asdf3" }
     ],
-    showPersons: false
+    showPersons: false,
+    toggleClicked: 0,
+    authenticated: false
   };
 
   nameChangedHandler = (event, id) => {
@@ -65,33 +90,55 @@ class App extends PureComponent {
   };
 
   togglePersonHandler = () => {
-    this.setState({ showPersons: !this.state.showPersons });
+    const doesShow = this.state.showPersons;
+    this.setState((prevState, props) => {
+      return {
+        showPersons: !doesShow,
+        toggleClicked: prevState.toggleClicked + 1
+      };
+    });
+  };
+
+  loginHandler = () => {
+    this.setState({ authenticated: true });
   };
 
   render() {
-    console.log('[App.js] Inside render()');
+    console.log("[App.js] Inside render()");
     let persons = null;
 
     if (this.state.showPersons) {
-      persons = (<Persons
-            persons={this.state.persons}
-            clicked={this.deletePersonHandler}
-            changed={this.nameChangedHandler} />
+      persons = (
+        <Persons
+          persons={this.state.persons}
+          clicked={this.deletePersonHandler}
+          changed={this.nameChangedHandler}
+        />
       );
     }
 
     return (
-      <WithClass classes={classes.App}>
-        <button onClick={() => {this.setState({showPersons: true})}}>Show Persons</button>
+      <Auxiliary>
+        <button
+          onClick={() => {
+            this.setState({ showPersons: true });
+          }}
+        >
+          Show Persons
+        </button>
         <Cockpit
           appTitle={this.props.title}
           showPersons={this.state.showPersons}
           persons={this.state.persons}
-          clicked={this.togglePersonHandler} />
-        {persons}
-      </WithClass>
+          login={this.loginHandler}
+          clicked={this.togglePersonHandler}
+        />
+        <AuthContext.Provider value={this.state.authenticated}>
+          {persons}
+        </AuthContext.Provider>
+      </Auxiliary>
     );
   }
 }
 
-export default App;
+export default withClass(App, classes.App);
